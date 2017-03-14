@@ -1,13 +1,36 @@
 var express = require('express'); // express모듈 적용
-var app = express();
-var fs = require('fs'); // file system nodejs 모듈 적용
 var bodyParser = require('body-parser'); // body-parser 미들웨어 설정
+var fs = require('fs'); // file system nodejs 모듈 적용 (텍스트파일 업로드)
+var multer = require('multer'); // multer모듈 적용 (파일업로드)
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+})
+var upload = multer({ storage: storage })
+var app = express();
+app.use('/users',express.static('uploads'));
+
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.locals.pretty = true;
 app.set('view engine', 'jade'); // 템플릿 엔진 설정
 app.set('views', './views_file');
 
 //////////////// 라우터 시작 ////////////////
+
+// 업로드 - 파일 업로드 폼
+app.get('/upload', function(req, res){
+  res.render('upload');
+});
+
+app.post('/upload', upload.single('userfile'), function(req, res){
+  res.send('Uploaded! : '+req.file.filename); // object를 리턴함
+  console.log(req.file); // 콘솔(터미널)을 통해서 req.file Object 내용 확인 가능.
+});
 
 // 작성 - 글 작성후 post로 전송
 app.get('/topic/new', function(req, res){
